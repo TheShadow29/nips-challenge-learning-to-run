@@ -22,6 +22,7 @@ import math
 import types
 
 # Command line parameters
+
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller')
 parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='train', action='store_false', default=True)
@@ -33,6 +34,7 @@ args = parser.parse_args()
 # Load walking environment
 env = RunEnv(args.visualize)
 env.reset()
+obs = env.reset(difficulty=0)
 
 def compute_reward_new(self):
     reward =  - (self.current_state[2] - 0.91)**2
@@ -99,4 +101,8 @@ if not args.train:
     agent.load_weights(args.model)
     # sys.exit(0)
     # Finally, evaluate our algorithm for 1 episode.
-    agent.test(env, nb_episodes=1, visualize=False, nb_max_episode_steps=600)
+    # agent.test(env, nb_episodes=1, visualize=False, nb_max_episode_steps=600)
+
+    for i in range(600):
+        ac = agent.forward(obs)
+        obs, rew, _, _ = env.step(ac)
