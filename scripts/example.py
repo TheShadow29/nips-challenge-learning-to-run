@@ -12,6 +12,7 @@ import numpy as np
 from rl.agents import DDPGAgent
 from rl.memory import SequentialMemory
 from rl.random import OrnsteinUhlenbeckProcess
+from rl.callbacks import Callback
 
 from osim.env import *
 
@@ -36,11 +37,22 @@ env = RunEnv(args.visualize)
 env.reset()
 obs = env.reset(difficulty=0)
 
+class Histories(Callback):
+    def __init__(self):
+        Callback.__init__(self)
+        self.action_list = []
+
+    def on_action_end(self, action, logs={}):
+        self.action_list.append(action)
+
+
 def compute_reward_new(self):
     reward =  - (self.current_state[2] - 0.91)**2
     return reward
 
-env.compute_reward = types.MethodType(compute_reward_new, env)
+if args.train:
+    print 'TRAIN'
+    env.compute_reward = types.MethodType(compute_reward_new, env)
 
 nb_actions = env.action_space.shape[0]
 
@@ -101,8 +113,14 @@ if not args.train:
     agent.load_weights(args.model)
     # sys.exit(0)
     # Finally, evaluate our algorithm for 1 episode.
-    # agent.test(env, nb_episodes=1, visualize=False, nb_max_episode_steps=600)
+    h = Histories()
+    agent.test(env, nb_episodes=1, visualize=False, nb_max_episode_steps=1200, action_repetition=2, callbacks=[h])
+    print h.action_list
+    # f = open('values.txt', 'w')
+    # for i in range(600):
+    #     ac = agent.forward(obs)
+    #     f.write(str(ac))
+    #     f.write('\n\n\n') 
+    #     obs, rew, _, _ = env.step(ac)
 
-    for i in range(600):
-        ac = agent.forward(obs)
-        obs, rew, _, _ = env.step(ac)
+    # f.close()
