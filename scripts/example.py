@@ -1,6 +1,7 @@
 # Derived from keras-rl
 import opensim as osim
 import numpy as np
+import pickle
 import sys
 
 from keras.models import Sequential, Model
@@ -37,21 +38,32 @@ env = RunEnv(args.visualize)
 env.reset()
 obs = env.reset(difficulty=0)
 
+
 class Histories(Callback):
     def __init__(self):
         Callback.__init__(self)
-        self.action_list = []
+        self.action_dict_list = dict()
+        self.ep_ctr = 0
+
+    def on_episode_begin(self, episode, logs={}):
+        self.action_dict_list[self.ep_ctr] = list()
+        pass
 
     def on_action_end(self, action, logs={}):
-        self.action_list.append(action)
+        # self.action_list.append(action)
+        self.action_dict_list[self.ep_ctr].append(action)
+
+    def on_episode_end(self, episode, logs={}):
+        self.ep_ctr += 1
 
 
 def compute_reward_new(self):
-    reward =  - (self.current_state[2] - 0.91)**2
+    reward = -(self.current_state[2] - 0.91)**2
     return reward
 
+
 if args.train:
-    print 'TRAIN'
+    print('TRAIN')
     env.compute_reward = types.MethodType(compute_reward_new, env)
 
 nb_actions = env.action_space.shape[0]
@@ -114,13 +126,17 @@ if not args.train:
     # sys.exit(0)
     # Finally, evaluate our algorithm for 1 episode.
     h = Histories()
-    agent.test(env, nb_episodes=1, visualize=False, nb_max_episode_steps=1200, action_repetition=2, callbacks=[h])
-    print h.action_list
-    # f = open('values.txt', 'w')
+    agent.test(env, nb_episodes=2, visualize=False, nb_max_episode_steps=600, action_repetition=2, callbacks=[h])
+    # print h.action_list
+    f = open('values.txt', 'w')
+    # f.write(str(h.action_list)
+    pickle.dump(h.action_dict_list, f)
+    f.close()
+    print("done pickling")
     # for i in range(600):
     #     ac = agent.forward(obs)
     #     f.write(str(ac))
-    #     f.write('\n\n\n') 
+    #     f.write('\n\n\n')
     #     obs, rew, _, _ = env.step(ac)
 
     # f.close()
