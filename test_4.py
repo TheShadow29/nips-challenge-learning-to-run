@@ -22,11 +22,11 @@ def my_controller(observation, ctr):
 # observation
 # head 22, 23
 # pelvis 24, 25
-ep_no = 1
+ep_no = 2
 arr_list = arrs[ep_no]
 max_action_steps = len(arr_list)
 # print max_action_steps
 for i in range(max_action_steps):
     observation, reward, done, info = env.step(my_controller(observation, i))
-    # print i
+    print reward
     # ctr += 1

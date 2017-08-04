@@ -30,7 +30,7 @@ parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='train', action='store_false', default=True)
 parser.add_argument('--steps', dest='steps', action='store', default=1000000, type=int)
 parser.add_argument('--visualize', dest='visualize', action='store_true', default=False)
-parser.add_argument('--model', dest='model', action='store', default="arka.h5f")
+parser.add_argument('--model', dest='model', action='store', default="aviral.h5f")
 args = parser.parse_args()
 
 # Load walking environment
@@ -58,7 +58,8 @@ class Histories(Callback):
 
 
 def compute_reward_new(self):
-    reward = -(self.current_state[2] - 0.91)**2
+    cnt = int (self.current_state[1] <= 0)
+    reward = -(self.current_state[2] - 0.91)**2 - 1.0*cnt
     return reward
 
 
