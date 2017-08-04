@@ -19,19 +19,26 @@ from keras.optimizers import RMSprop
 
 import argparse
 import math
+import types
 
 # Command line parameters
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller')
 parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='train', action='store_false', default=True)
-parser.add_argument('--steps', dest='steps', action='store', default=10000, type=int)
+parser.add_argument('--steps', dest='steps', action='store', default=1000000, type=int)
 parser.add_argument('--visualize', dest='visualize', action='store_true', default=False)
-parser.add_argument('--model', dest='model', action='store', default="example.h5f")
+parser.add_argument('--model', dest='model', action='store', default="arka.h5f")
 args = parser.parse_args()
 
 # Load walking environment
 env = RunEnv(args.visualize)
 env.reset()
+
+def compute_reward_new(self):
+    reward =  - (self.current_state[2] - 0.91)**2
+    return reward
+
+env.compute_reward = types.MethodType(compute_reward_new, env)
 
 nb_actions = env.action_space.shape[0]
 
@@ -83,10 +90,13 @@ agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
 # Ctrl + C.
 if args.train:
     agent.fit(env, nb_steps=nallsteps, visualize=True, verbose=1, nb_max_episode_steps=1000, log_interval=1000)
+    print 'TRAINED THE MODELS'
     # After training is done, we save the final weights.
     agent.save_weights(args.model, overwrite=True)
 
 if not args.train:
+    print args.model
     agent.load_weights(args.model)
+    # sys.exit(0)
     # Finally, evaluate our algorithm for 1 episode.
-    agent.test(env, nb_episodes=1, visualize=False, nb_max_episode_steps=500)
+    agent.test(env, nb_episodes=1, visualize=False, nb_max_episode_steps=600)

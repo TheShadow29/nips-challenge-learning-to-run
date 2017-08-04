@@ -1,7 +1,7 @@
 import opensim
 import math
 import numpy as np
-import os, sys
+import os
 import random
 import string
 from itertools import chain
@@ -62,24 +62,18 @@ class RunEnv(OsimEnv):
         self.current_state = self.last_state
         return self.last_state
 
-    # def compute_reward(self):
-    #     # Compute ligaments penalty
-    #     lig_pen = 0
-    #     # Get ligaments
-    #     for j in range(20, 26):
-    #         lig = opensim.CoordinateLimitForce.safeDownCast(self.osim_model.forceSet.get(j))
-    #         lig_pen += lig.calcLimitForce(self.osim_model.state) ** 2
-
-    #     # Get the pelvis X delta
-    #     delta_x = self.current_state[self.STATE_PELVIS_X] - self.last_state[self.STATE_PELVIS_X]
-
-        # return delta_x - math.sqrt(lig_pen) * 10e-8
-
     def compute_reward(self):
-        reward =  - (self.current_state[self.STATE_PELVIS_Y] - 0.91)**2
-        # print 'ABCDED'
-        # sys.exit(0)
-        return reward
+        # Compute ligaments penalty
+        lig_pen = 0
+        # Get ligaments
+        for j in range(20, 26):
+            lig = opensim.CoordinateLimitForce.safeDownCast(self.osim_model.forceSet.get(j))
+            lig_pen += lig.calcLimitForce(self.osim_model.state) ** 2
+
+        # Get the pelvis X delta
+        delta_x = self.current_state[self.STATE_PELVIS_X] - self.last_state[self.STATE_PELVIS_X]
+
+        return delta_x - math.sqrt(lig_pen) * 0.0001
 
     def is_pelvis_too_low(self):
         return (self.current_state[self.STATE_PELVIS_Y] < 0.65)
@@ -125,9 +119,6 @@ class RunEnv(OsimEnv):
                 return ret
         return [100,0,0]
         
-    def _step(self, action):
-        self.last_state = self.current_state
-        return super(RunEnv, self)._step(action)
 
     def get_observation(self):
         bodies = ['head', 'pelvis', 'torso', 'toes_l', 'toes_r', 'talus_l', 'talus_r']
