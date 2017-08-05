@@ -126,9 +126,9 @@ if not args.train:
     # sys.exit(0)
     # Finally, evaluate our algorithm for 1 episode.
     h = Histories()
-    agent.test(env, nb_episodes=10, visualize=False, nb_max_episode_steps=600, action_repetition=2, callbacks=[h])
+    agent.test(env, nb_episodes=10, visualize=False, nb_max_episode_steps=1000, action_repetition=3, callbacks=[h])
     # print h.action_list
-    f = open('values.txt', 'w')
+    f = open('values3.txt', 'w')
     # f.write(str(h.action_list)
     pickle.dump(h.action_dict_list, f)
     f.close()

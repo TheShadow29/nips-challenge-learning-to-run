@@ -30,7 +30,7 @@ parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='train', action='store_false', default=True)
 parser.add_argument('--steps', dest='steps', action='store', default=1000000, type=int)
 parser.add_argument('--visualize', dest='visualize', action='store_true', default=False)
-parser.add_argument('--model', dest='model', action='store', default="aviral.h5f")
+parser.add_argument('--model', dest='model', action='store', default="aviral_jump_new.h5f")
 args = parser.parse_args()
 
 # Load walking environment
@@ -58,8 +58,11 @@ class Histories(Callback):
 
 
 def compute_reward_new(self):
-    cnt = int (self.current_state[1] <= 0)
-    reward = -(self.current_state[2] - 0.91)**2 - 1.0*cnt
+    y_vel_pelvis = -1.0*(self.current_state[5])**2
+    x_pelvis = self.current_state[1] 
+    x_talus_left = self.current_state[32]
+    x_talus_right = self.current_state[34]
+    reward = y_vel_pelvis + x_pelvis + 0.5*(x_talus_right + x_talus_left) - 0.25*np.abs(x_talus_left - x_talus_right)
     return reward
 
 
@@ -116,6 +119,8 @@ agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
 # slows down training quite a lot. You can always safely abort the training prematurely using
 # Ctrl + C.
 if args.train:
+    agent.load_weights('aviral_jump_new.h5f')
+    print 'weights loaded'
     agent.fit(env, nb_steps=nallsteps, visualize=True, verbose=1, nb_max_episode_steps=1000, log_interval=1000)
     print 'TRAINED THE MODELS'
     # After training is done, we save the final weights.
@@ -127,9 +132,9 @@ if not args.train:
     # sys.exit(0)
     # Finally, evaluate our algorithm for 1 episode.
     h = Histories()
-    agent.test(env, nb_episodes=10, visualize=False, nb_max_episode_steps=600, action_repetition=2, callbacks=[h])
+    agent.test(env, nb_episodes=10, visualize=False, nb_max_episode_steps=1000, action_repetition=2, callbacks=[h])
     # print h.action_list
-    f = open('values.txt', 'w')
+    f = open('values_jump_new.txt', 'w')
     # f.write(str(h.action_list)
     pickle.dump(h.action_dict_list, f)
     f.close()

@@ -32,7 +32,7 @@ arr_list = arrs[ep_no]
 ctr = 0
 
 while True:
-    [observation, reward, done, info] = client.env_step(my_controller(observation, ctr))
+    [observation, reward, done, info] = client.env_step(my_controller(observation, ctr), True)
     ctr += 1
     if done:
         observation = client.env_reset()
