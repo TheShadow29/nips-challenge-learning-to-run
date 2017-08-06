@@ -19,7 +19,7 @@ g = open('values_second_leg.txt', 'rb')
 arrs_new = pickle.load(g)
 
 def my_controller(observation, ctr):
-    return arr_list[ctr]
+    return list(arr_list[ctr])
 
 
 # head0_x = 0
@@ -39,6 +39,7 @@ max_action_steps = len(arr_list)
 
 # print max_action_steps
 for i in range(max_action_steps):
+    # print type(my_controller(observation, i)[0])
     observation, reward, done, info = env.step(my_controller(observation, i))
 
 print observation
