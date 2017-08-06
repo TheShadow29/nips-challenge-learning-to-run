@@ -23,7 +23,7 @@ import argparse
 import math
 import types
 
-from modified_func import fit_new
+from modified_func import fit_new, test_new
 # Command line parameters
 
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller')
@@ -123,7 +123,7 @@ agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
 # slows down training quite a lot. You can always safely abort the training prematurely using
 # Ctrl + C.
 if args.train:
-    agent.load_weights("initial_then_trained.h5f")
+    agent.load_weights("initial_then_trained_new.h5f")
     agent.fit = types.MethodType(fit_new, agent)
     print 'weights loaded'
 
@@ -141,10 +141,19 @@ if args.train:
 if not args.train:
     print args.model
     agent.load_weights(args.model)
+    agent.test = types.MethodType(test_new, agent)
+
+    print 'weights loaded'
+
+    if args.load_initial:
+        f = open('values_jump_new.txt', 'rb')
+        arrs = pickle.load(f)
+        ep_no = 2
+        arr = arrs[ep_no]
     # sys.exit(0)
     # Finally, evaluate our algorithm for 1 episode.
     h = Histories()
-    agent.test(env, nb_episodes=10, visualize=False, nb_max_episode_steps=1000, action_repetition=2, callbacks=[h])
+    agent.test(env, nb_episodes=10, visualize=False, nb_max_episode_steps=1000, action_repetition=2, callbacks=[h], arr=arr)
     # print h.action_list
     f = open('values_second_leg.txt', 'w')
     # f.write(str(h.action_list)
