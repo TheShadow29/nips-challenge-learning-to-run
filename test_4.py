@@ -12,7 +12,7 @@ observation = env.reset(difficulty = 0)
 #print observation
 # sys.exit(0)
 
-f = open('./scripts/values.txt', 'rb')
+f = open('./scripts/values_jump_new.txt', 'rb')
 arrs = pickle.load(f)
 def my_controller(observation, ctr):
     return arr_list[ctr]
@@ -26,7 +26,9 @@ ep_no = 2
 arr_list = arrs[ep_no]
 max_action_steps = len(arr_list)
 # print max_action_steps
-for i in range(max_action_steps):
+for i in range(200):
     observation, reward, done, info = env.step(my_controller(observation, i))
     print reward
     # ctr += 1
+
+print observation
