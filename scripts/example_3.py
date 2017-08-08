@@ -69,6 +69,22 @@ def compute_reward_new(self):
     reward = pos_pelvis + y_vel_pelvis + min(x_talus_right, x_talus_left) - ind_val
     return reward
 
+def compute_reward_new1(self):
+    y_pos_pelvis = int(self.current_state[2] > 0.75)
+    x_pelvis = self.current_state[1]
+    x_talus_left = self.current_state[32]
+    x_talus_right = self.current_state[34]
+    y_talus_left = self.current_state[33]
+    y_talus_right = self.current_statep[35]
+    y_talus_left_ind = int(y_talus_left < 0.65)
+    y_talus_right_ind = int(y_talus_right < 0.65)
+    min_talus = np.min(x_talus_right, x_talus_left)
+    max_talus = np.max(x_talus_right, x_talus_left)
+    min_more_than = int(min_talus > x_pelvis)
+    max_less_than = int(max_talus < x_pelvis)
+    reward = 2*y_pos_pelvis -min_more_than - max_less_than + y_talus_right_ind + y_talus_left_ind
+    return reward
+
 
 if args.train:
     print('TRAIN')
@@ -150,12 +166,19 @@ if not args.train:
         arrs = pickle.load(f)
         ep_no = 2
         arr = arrs[ep_no]
+        g = open('values_second_leg.txt', 'rb')
+        arrs_new = pickle.load(g)
+        ep_no = 1
+        arr_new = arrs_new[ep_no]
+        arr = arr[0:180]
+        arr = arr + arr_new
+        print len(arr)
     # sys.exit(0)
     # Finally, evaluate our algorithm for 1 episode.
     h = Histories()
     agent.test(env, nb_episodes=10, visualize=False, nb_max_episode_steps=1000, action_repetition=2, callbacks=[h], arr=arr)
     # print h.action_list
-    f = open('values_second_leg.txt', 'w')
+    f = open('values_second_leg_again1.txt', 'w')
     # f.write(str(h.action_list)
     pickle.dump(h.action_dict_list, f)
     f.close()

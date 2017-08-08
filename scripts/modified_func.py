@@ -284,7 +284,7 @@ def test_new(self, env, nb_episodes=1, action_repetition=1, callbacks=None, visu
             observation = self.processor.process_observation(observation)
         assert observation is not None
 
-        for ac in arr[0:180]:
+        for ac in arr:
             # print type(ac), ac
             if self.processor is not None:
                 ac = self.processor.process_action(ac)
@@ -294,6 +294,9 @@ def test_new(self, env, nb_episodes=1, action_repetition=1, callbacks=None, visu
             if self.processor is not None:
                 observation, reward, done, info = self.processor.process_step(observation, reward, done, info)
             callbacks.on_action_end(ac)
+            self.step += 1
+            episode_step += 1
+            episode_reward += reward
             if done:
                 #warnings.warn('Env ended before the deterministic non-neural steps could end.')
                 observation = deepcopy(env.reset())
@@ -317,6 +320,7 @@ def test_new(self, env, nb_episodes=1, action_repetition=1, callbacks=None, visu
             if self.processor is not None:
                 observation, r, done, info = self.processor.process_step(observation, r, done, info)
             callbacks.on_action_end(action)
+
             if done:
                 warnings.warn('Env ended before {} random steps could be performed at the start. You should probably lower the `nb_max_start_steps` parameter.'.format(nb_random_start_steps))
                 observation = deepcopy(env.reset())
