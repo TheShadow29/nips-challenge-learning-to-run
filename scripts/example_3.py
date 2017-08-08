@@ -31,7 +31,7 @@ parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='train', action='store_false', default=True)
 parser.add_argument('--steps', dest='steps', action='store', default=1000000, type=int)
 parser.add_argument('--visualize', dest='visualize', action='store_true', default=False)
-parser.add_argument('--model', dest='model', action='store', default="initial_then_trained_new.h5f")
+parser.add_argument('--model', dest='model', action='store', default="less_params.h5f")
 parser.add_argument('--load_initial', dest='load_initial', action='store_true', default=False)
 args = parser.parse_args()
 
@@ -62,12 +62,13 @@ class Histories(Callback):
 def compute_reward_new(self):
     pos_pelvis = -(self.current_state[2] - 0.91)**2
     y_vel_pelvis = -1.0*(self.current_state[5])**2
-    x_pelvis = self.current_state[1] 
+    x_pelvis = self.current_state[1]
     x_talus_left = self.current_state[32]
     x_talus_right = self.current_state[34]
     ind_val = np.abs(x_talus_left - x_talus_right)
     reward = pos_pelvis + y_vel_pelvis + min(x_talus_right, x_talus_left) - ind_val
     return reward
+
 
 def compute_reward_new1(self):
     y_pos_pelvis = int(self.current_state[2] > 0.75)
@@ -75,20 +76,21 @@ def compute_reward_new1(self):
     x_talus_left = self.current_state[32]
     x_talus_right = self.current_state[34]
     y_talus_left = self.current_state[33]
-    y_talus_right = self.current_statep[35]
+    y_talus_right = self.current_state[35]
     y_talus_left_ind = int(y_talus_left < 0.65)
     y_talus_right_ind = int(y_talus_right < 0.65)
-    min_talus = np.min(x_talus_right, x_talus_left)
-    max_talus = np.max(x_talus_right, x_talus_left)
+    min_talus = min(x_talus_right, x_talus_left)
+    max_talus = max(x_talus_right, x_talus_left)
     min_more_than = int(min_talus > x_pelvis)
     max_less_than = int(max_talus < x_pelvis)
-    reward = 2*y_pos_pelvis -min_more_than - max_less_than + y_talus_right_ind + y_talus_left_ind
+
+    reward = 2*y_pos_pelvis - min_more_than - max_less_than + y_talus_right_ind + y_talus_left_ind
     return reward
 
 
 if args.train:
     print('TRAIN')
-    env.compute_reward = types.MethodType(compute_reward_new, env)
+    env.compute_reward = types.MethodType(compute_reward_new1, env)
 
 nb_actions = env.action_space.shape[0]
 
@@ -100,8 +102,8 @@ nallsteps = args.steps
 actor = Sequential()
 actor.add(Flatten(input_shape=(1,) + env.observation_space.shape))
 actor.add(Dense(32))
-actor.add(Activation('relu'))
-actor.add(Dense(32))
+# actor.add(Activation('relu'))
+# actor.add(Dense(32))
 actor.add(Activation('relu'))
 actor.add(Dense(32))
 actor.add(Activation('relu'))
@@ -139,17 +141,17 @@ agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
 # slows down training quite a lot. You can always safely abort the training prematurely using
 # Ctrl + C.
 if args.train:
-    agent.load_weights("initial_then_trained_new.h5f")
-    agent.fit = types.MethodType(fit_new, agent)
-    print 'weights loaded'
+    # agent.load_weights("initial_then_trained_new.h5f")
+    # agent.fit = types.MethodType(fit_new, agent)
+    # print 'weights loaded'
 
-    if args.load_initial:
-        f = open('values_jump_new.txt', 'rb')
-        arrs = pickle.load(f)
-        ep_no = 2
-        arr = arrs[ep_no]
+    # if args.load_initial:
+    #     f = open('values_jump_new.txt', 'rb')
+    #     arrs = pickle.load(f)
+    #     ep_no = 2
+    #     arr = arrs[ep_no]
 
-    agent.fit(env, nb_steps=nallsteps, visualize=True, verbose=1, nb_max_episode_steps=1000, log_interval=1000, arr=arr)
+    agent.fit(env, nb_steps=nallsteps, visualize=True, verbose=1, nb_max_episode_steps=1000, log_interval=1000)
     print 'TRAINED THE MODELS'
     # After training is done, we save the final weights.
     agent.save_weights(args.model, overwrite=True)
@@ -157,7 +159,7 @@ if args.train:
 if not args.train:
     print args.model
     agent.load_weights(args.model)
-    agent.test = types.MethodType(test_new, agent)
+    agent.test = types.MethodType(test_new, agent)  #
 
     print 'weights loaded'
 
@@ -173,10 +175,13 @@ if not args.train:
         arr = arr[0:180]
         arr = arr + arr_new
         print len(arr)
+    else:
+        arr = [[0]*18]
     # sys.exit(0)
     # Finally, evaluate our algorithm for 1 episode.
     h = Histories()
-    agent.test(env, nb_episodes=10, visualize=False, nb_max_episode_steps=1000, action_repetition=2, callbacks=[h], arr=arr)
+    agent.test(env, nb_episodes=10, visualize=False, nb_max_episode_steps=250, action_repetition=2, callbacks=[h], arr=arr)
+    # agent.test(env, nb_episodes=10, visualize=False, nb_max_episode_steps=1000, action_repetition=2, callbacks=[h], arr=arr)
     # print h.action_list
     f = open('values_second_leg_again1.txt', 'w')
     # f.write(str(h.action_list)

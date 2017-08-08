@@ -131,7 +131,7 @@ def fit_new(self, env, nb_steps, action_repetition=1, callbacks=None, verbose=1,
                             break
 
                     #############
-                    
+
                     # Perform random starts at beginning of episode and do not record them into the experience.
                     # This slightly changes the start position between games.
                     nb_random_start_steps = 0 if nb_max_start_steps == 0 else np.random.randint(nb_max_start_steps)
