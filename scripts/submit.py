@@ -7,7 +7,7 @@ import numpy as np
 
 # Settings
 remote_base = "http://grader.crowdai.org:1729"
-crowdai_token = "eb91fbcaff6edd1cf9478ee56e41319a"
+crowdai_token = "e5d9c43bc6add5150e8e23029d118215"
 
 client = Client(remote_base)
 
@@ -22,7 +22,7 @@ g = open('values_second_leg.txt', 'rb')
 arrs_new = pickle.load(g)
 
 def my_controller(observation, ctr):
-    return list(arr_list[min(ctr, max_action_steps-1)])
+    return [float(x) for x in list(arr_list[min(ctr, max_action_steps-1)])]
 
 
 ep_no = 2

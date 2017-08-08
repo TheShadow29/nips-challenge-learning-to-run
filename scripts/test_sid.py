@@ -38,8 +38,18 @@ arr_list = arr_list + arr_list_new
 max_action_steps = len(arr_list)
 
 # print max_action_steps
-for i in range(max_action_steps):
+#for i in range(max_action_steps):
+#    # print type(my_controller(observation, i)[0])
+#    observation, reward, done, info = env.step(my_controller(observation, i))
+
+total_reward = 0
+# print max_action_steps
+for i in range(min(max_action_steps, 500)):
     # print type(my_controller(observation, i)[0])
     observation, reward, done, info = env.step(my_controller(observation, i))
+    if (observation[2] < 0.65):
+    	break
+    total_reward += reward
+    print total_reward
 
 print observation
