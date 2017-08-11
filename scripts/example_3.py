@@ -1,8 +1,10 @@
 # Derived from keras-rl
+from __future__ import division
 import opensim as osim
 import numpy as np
 import pickle
 import sys
+
 
 from keras.models import Sequential, Model
 from keras.layers import Dense, Activation, Flatten, Input, concatenate
@@ -31,7 +33,8 @@ parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='train', action='store_false', default=True)
 parser.add_argument('--steps', dest='steps', action='store', default=1000000, type=int)
 parser.add_argument('--visualize', dest='visualize', action='store_true', default=False)
-parser.add_argument('--model', dest='model', action='store', default="less_params.h5f")
+# parser.add_argument('--model', dest='model', action='store', default="less_params.h5f")
+parser.add_argument('--model', dest='model', action='store', default="head_penalized_reward_11_aug.h5f")
 parser.add_argument('--load_initial', dest='load_initial', action='store_true', default=False)
 args = parser.parse_args()
 
@@ -88,9 +91,25 @@ def compute_reward_new1(self):
     return reward
 
 
+def compute_reward_new_2(self):
+    x_pos_pelvis = self.current_state[1]
+    x_head_pelv_diff = -np.abs(self.current_state[1] - self.current_state[22])
+    y_head_penalty_ind = int(self.current_state[23] - 1.2 < 0)
+    x_tal_avg = (self.current_state[32] + self.current_state[34]) / 2
+    y_talus_left = self.current_state[33]
+    y_talus_right = self.current_state[35]
+    reward = x_pos_pelvis + x_head_pelv_diff + y_head_penalty_ind + x_tal_avg
+    if (y_talus_left > 0.2):
+        reward -= y_talus_left/2
+    if (y_talus_right > 0.2):
+        reward -= y_talus_right/2
+
+    return reward
+
+
 if args.train:
     print('TRAIN')
-    env.compute_reward = types.MethodType(compute_reward_new1, env)
+    env.compute_reward = types.MethodType(compute_reward_new_2, env)
 
 nb_actions = env.action_space.shape[0]
 
@@ -102,8 +121,8 @@ nallsteps = args.steps
 actor = Sequential()
 actor.add(Flatten(input_shape=(1,) + env.observation_space.shape))
 actor.add(Dense(32))
-# actor.add(Activation('relu'))
-# actor.add(Dense(32))
+actor.add(Activation('relu'))
+actor.add(Dense(32))
 actor.add(Activation('relu'))
 actor.add(Dense(32))
 actor.add(Activation('relu'))
@@ -141,18 +160,20 @@ agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
 # slows down training quite a lot. You can always safely abort the training prematurely using
 # Ctrl + C.
 if args.train:
-    # agent.load_weights("initial_then_trained_new.h5f")
-    # agent.fit = types.MethodType(fit_new, agent)
-    # print 'weights loaded'
+    agent.load_weights("initial_then_trained_new.h5f")
+    # agent.load_weights('./aviral_jum')
+    agent.fit = types.MethodType(fit_new, agent)
+    print('weights loaded')
 
-    # if args.load_initial:
-    #     f = open('values_jump_new.txt', 'rb')
-    #     arrs = pickle.load(f)
-    #     ep_no = 2
-    #     arr = arrs[ep_no]
-
-    agent.fit(env, nb_steps=nallsteps, visualize=True, verbose=1, nb_max_episode_steps=1000, log_interval=1000)
-    print 'TRAINED THE MODELS'
+    if args.load_initial:
+        # f = open('values_jump_new.txt', 'rb')
+        f = open('./one_leg_forward.txt', 'rb')
+        arrs = pickle.load(f)
+        ep_no = 1
+        arr = arrs[ep_no]
+    arr = arr[:180]
+    agent.fit(env, nb_steps=nallsteps, visualize=True, verbose=1, nb_max_episode_steps=1000, log_interval=1000, arr=arr)
+    print('TRAINED THE MODELS')
     # After training is done, we save the final weights.
     agent.save_weights(args.model, overwrite=True)
 
@@ -180,10 +201,10 @@ if not args.train:
     # sys.exit(0)
     # Finally, evaluate our algorithm for 1 episode.
     h = Histories()
-    agent.test(env, nb_episodes=10, visualize=False, nb_max_episode_steps=250, action_repetition=2, callbacks=[h], arr=arr)
+    agent.test(env, nb_episodes=2, visualize=False, nb_max_episode_steps=250, action_repetition=2, callbacks=[h], arr=arr)
     # agent.test(env, nb_episodes=10, visualize=False, nb_max_episode_steps=1000, action_repetition=2, callbacks=[h], arr=arr)
     # print h.action_list
-    f = open('values_second_leg_again1.txt', 'w')
+    f = open('one_leg_forward.txt', 'w')
     # f.write(str(h.action_list)
     pickle.dump(h.action_dict_list, f)
     f.close()
