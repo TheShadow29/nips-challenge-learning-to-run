@@ -113,7 +113,7 @@ def fit_new(self, env, nb_steps, action_repetition=1, callbacks=None, verbose=1,
                     assert observation is not None
 
                     ############### HERE ##################
-                    for ac in arr[0:180]:
+                    for ac in arr[:]:
                         # print type(ac), ac
                         if self.processor is not None:
                             ac = self.processor.process_action(ac)
