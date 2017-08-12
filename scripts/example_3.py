@@ -34,7 +34,7 @@ parser.add_argument('--test', dest='train', action='store_false', default=True)
 parser.add_argument('--steps', dest='steps', action='store', default=1000000, type=int)
 parser.add_argument('--visualize', dest='visualize', action='store_true', default=False)
 # parser.add_argument('--model', dest='model', action='store', default="less_params.h5f")
-parser.add_argument('--model', dest='model', action='store', default="head_penalized_reward_11_aug.h5f")
+parser.add_argument('--model', dest='model', action='store', default="head_penalized_reward_12_aug.h5f")
 parser.add_argument('--load_initial', dest='load_initial', action='store_true', default=False)
 args = parser.parse_args()
 
@@ -92,13 +92,14 @@ def compute_reward_new1(self):
 
 
 def compute_reward_new_2(self):
+    y_pos_pelvis = int(self.current_state[2] > 0.75)
     x_pos_pelvis = self.current_state[1]
     x_head_pelv_diff = -np.abs(self.current_state[1] - self.current_state[22])
     y_head_penalty_ind = int(self.current_state[23] - 1.2 < 0)
     x_tal_avg = (self.current_state[32] + self.current_state[34]) / 2
     y_talus_left = self.current_state[33]
     y_talus_right = self.current_state[35]
-    reward = x_pos_pelvis + x_head_pelv_diff + y_head_penalty_ind + x_tal_avg
+    reward = y_pos_pelvis + x_pos_pelvis + x_head_pelv_diff - y_head_penalty_ind + x_tal_avg
     if (y_talus_left > 0.2):
         reward -= y_talus_left/2
     if (y_talus_right > 0.2):
@@ -171,7 +172,7 @@ if args.train:
         arrs = pickle.load(f)
         ep_no = 1
         arr = arrs[ep_no]
-    arr = arr[:180]
+    arr = arr[:200]
     agent.fit(env, nb_steps=nallsteps, visualize=True, verbose=1, nb_max_episode_steps=1000, log_interval=1000, arr=arr)
     print('TRAINED THE MODELS')
     # After training is done, we save the final weights.
