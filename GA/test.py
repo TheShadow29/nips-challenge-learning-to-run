@@ -4,9 +4,11 @@ import pickle
 import opensim as osim
 from osim.env import RunEnv
 
-env = RunEnv(visualize=True)
 
 def main():
+
+	env = RunEnv(visualize=True)
+	env.close()
 
 	with open('save.p', 'r') as f:
 		population = pickle.load(f)
@@ -26,7 +28,7 @@ def main():
 			break
 
 
-	print total_reward	
+	print total_reward
 
 if __name__ == '__main__':
 	main()

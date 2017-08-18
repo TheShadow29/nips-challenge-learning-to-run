@@ -6,8 +6,6 @@ import pickle
 import opensim as osim
 from osim.env import RunEnv
 
-env = RunEnv(visualize=True)
-
 class NN(object):
 
 	def __init__(self):
@@ -36,7 +34,7 @@ class NN(object):
 
 		return nn
 
-def run(nn):
+def run(nn, env):
 	total_reward = 0
 	observation = env.reset()
 	for i in range(200):
@@ -50,14 +48,14 @@ def run(nn):
 
 
 def main():
-
+	env = RunEnv(visualize=False)
 	population = [[NN(), 0] for _ in range(100)]
 	generation = 0
 
 	for _ in range(2000):
 		for i in range(len(population)):
 			print i
-			population[i][1] = run(population[i][0])
+			population[i][1] = run(population[i][0], env)
 
 		population = sorted(population, key = lambda x: x[1], reverse = True)
 		print np.mean([p[1] for p in population[:5]])
