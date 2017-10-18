@@ -4,8 +4,9 @@ import opensim as osim
 import numpy as np
 import keras
 import rl
-
+import tensorflow as tf
 import argparse
+from keras.backend.tensorflow_backend import set_session
 
 from modified_functions import fit_new, test_new
 
@@ -110,6 +111,11 @@ class ddpg_keras():
 
 if __name__ == '__main__':
     # print('hello')
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.3
+    config.gpu_options.visible_device_list = "0"
+    set_session(tf.Session(config=config))
+
     parser = argparse.ArgumentParser(description='Train or test neural net motor controller')
     parser.add_argument('--train', dest='train', action='store_true', default=True)
     parser.add_argument('--test', dest='train', action='store_false', default=True)
